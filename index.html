@@ -207,7 +207,7 @@
 </head>
 <body>
 
-<button id="download-btn" onclick="alert('PDF download coming soon — slides are still in progress!')">⬇ Download PDF</button>
+<button id="download-btn" onclick="downloadPDF()">⬇ Download PDF</button>
 <button id="refresh-btn" onclick="refreshSlides()" style="position:fixed;top:20px;right:180px;background:var(--accent);color:var(--text);border:none;padding:10px 20px;border-radius:8px;font-family:'Glacial Indifference',sans-serif;font-size:14px;font-weight:600;cursor:pointer;z-index:100;transition:all 0.2s;letter-spacing:0.05em;">↻ Refresh</button>
 
 <div id="deck">
@@ -410,6 +410,48 @@
 
   // Override slides reference to support refresh
   Object.defineProperty(window, '_slides', { value: slides, writable: true });
+
+  function downloadPDF() {
+    const btn = document.getElementById('download-btn');
+    btn.textContent = '⬇ Generating...';
+    const s = window._slides || slides;
+    const saved = current;
+    
+    // Show all slides stacked for print
+    const deck = document.getElementById('deck');
+    const nav = document.getElementById('nav');
+    const dlBtn = document.getElementById('download-btn');
+    const rfBtn = document.getElementById('refresh-btn');
+    
+    // Add print styles
+    const printStyle = document.createElement('style');
+    printStyle.id = 'print-style';
+    printStyle.textContent = `
+      @media print {
+        body { background: white !important; overflow: visible !important; height: auto !important; }
+        #nav, #download-btn, #refresh-btn { display: none !important; }
+        #deck { position: static !important; width: auto !important; height: auto !important; display: block !important; }
+        .slide {
+          display: flex !important; position: relative !important;
+          width: 100vw !important; height: 56.25vw !important;
+          max-height: 100vh !important;
+          border-radius: 0 !important; box-shadow: none !important;
+          page-break-after: always !important;
+          break-after: page !important;
+        }
+        .slide:last-child { page-break-after: auto !important; break-after: auto !important; }
+      }
+    `;
+    document.head.appendChild(printStyle);
+    
+    window.print();
+    
+    // Cleanup after print dialog
+    setTimeout(() => {
+      document.head.removeChild(printStyle);
+      btn.textContent = '⬇ Download PDF';
+    }, 1000);
+  }
 </script>
 
 </body>
